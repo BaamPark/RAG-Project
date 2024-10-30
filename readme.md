@@ -2,6 +2,11 @@
 
 This project is a frontend interface for a Retrieval-Augmented Generation (RAG) system. Users enter a namespace, upload PDFs, and ask questions to interact with a backend powered by FastAPI and Pinecone.
 
+## Next plans
+- Implement database where userID, password, and namespace are stored
+- Implement authentication
+- Implement metadata filtering
+
 ## Backend
 - FastAPI
 - Pinecone (Vector database)
