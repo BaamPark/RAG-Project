@@ -1,34 +1,28 @@
-+---------------------+            +------------------------+
-|   User (Browser)    |            |  FastAPI Server         |
-|---------------------|            |------------------------|
-| Upload PDFs (Resume |--Upload--> |  Parse PDFs (PyPDF2)    |
-| and Certificates)   |            |  Generate Embeddings    |
-|                     |            |  Store in Pinecone      |
-+---------------------+            +------------------------+
-                                      |
-                                      v
-                         +------------------------------+
-                         |       Pinecone (Cloud)        |
-                         |  Stores embeddings, handles   |
-                         |  updates, and provides fast   |
-                         |  similarity search            |
-                         +------------------------------+
+# RAG Project Frontend
 
-                                      ^
-                                      | Query for Similar Data
-+---------------------+               |
-| LangChain + LLM     |<--------------+
-| (OpenAI / HF Model) |   
-| Analyzes data,      |
-| generates feedback, |
-| provides corrections|
-+---------------------+
+This project is a frontend interface for a Retrieval-Augmented Generation (RAG) system. Users enter a namespace, upload PDFs, and ask questions to interact with a backend powered by FastAPI and Pinecone.
 
-                                      |
-                      +--------------------------------+
-                      | User retrieves feedback through|
-                      |    API response from FastAPI    |
-                      +--------------------------------+
+## Backend
+- FastAPI
+- Pinecone (Vector database)
+- LangChain for RAG pipeline
 
+## Frontend
+- Next.js (App Router)
+- Shadcn/ui
 
-Front-end techstack: Next.js, shadcnUI
+## Instructions:
+- write .env file under backend folder
+- run run.sh
+
+## .env template
+```env
+OPENAI_API_KEY= your_openai_api_key
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
+LANGCHAIN_API_KEY=your_langchain_api_key
+LANGCHAIN_PROJECT=project_name
+PINECONE_API_KEY=your_pinecone_api_key
+PINECONE_REGION=your_pinecone_region
+PINECONE_CLOUD=your_pinecone_cloud
+```
