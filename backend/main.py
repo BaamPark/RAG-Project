@@ -13,7 +13,6 @@ from pinecone import Pinecone, ServerlessSpec
 from langchain_pinecone import PineconeVectorStore
 
 load_dotenv()
-# Initialize FastAPI app
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware, allow_origins=['*'], allow_methods=['*'], allow_headers=['*'],
