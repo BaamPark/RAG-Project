@@ -20,7 +20,7 @@ app.add_middleware(
 )
 
 
-def upsert_pinecone_index(file_path: str):
+def upsert_pinecone_index(file_path: str, namespace: str=""):
     embeddings = OpenAIEmbeddings(model="text-embedding-3-small") #dimension=1536
     pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
     index_name = "ragcv"
@@ -44,11 +44,11 @@ def upsert_pinecone_index(file_path: str):
         documents=chunked_documents, 
         embedding=embeddings, 
         index_name=index_name, 
-        namespace="cv"
+        namespace=namespace
     )
 
 
-def create_rag_pipeline():
+def create_rag_pipeline(namespace=""):
     embeddings = OpenAIEmbeddings(model="text-embedding-3-small") #dimension=1536
     pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 
@@ -63,7 +63,7 @@ def create_rag_pipeline():
                 region=os.getenv("PINECONE_REGION")
             ) 
         )
-    vector_store = PineconeVectorStore(index_name=index_name, embedding=embeddings, namespace='cv')
+    vector_store = PineconeVectorStore(index_name=index_name, embedding=embeddings, namespace=namespace)
 
     retriever = vector_store.as_retriever()
 
@@ -90,23 +90,23 @@ def create_rag_pipeline():
 
 
 @app.post("/upload-pdf/")
-async def upload_pdf(file: UploadFile = File(...)):
+async def upload_pdf(file: UploadFile = File(...), namespace: str = ""):
     try:
-        # Save the uploaded PDF
         file_path = f"./data/{file.filename}"
         with open(file_path, "wb") as f:
             f.write(await file.read())
 
-        upsert_pinecone_index(file_path=file_path)
+        upsert_pinecone_index(file_path=file_path, namespace=namespace)
         return {"message": "PDF uploaded successfully and RAG pipeline created."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing PDF: {str(e)}")
 
 
+
 @app.get("/query/")
-async def query_rag(question: str):
+async def query_rag(question: str, namespace: str = ""):
     try:
-        rag_chain = create_rag_pipeline()
+        rag_chain = create_rag_pipeline(namespace=namespace)
         response = rag_chain.invoke(question)
         return {"response": response}
     except Exception as e:
