@@ -113,6 +113,6 @@ async def query_rag(question: str, namespace: str = ""):
         raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")
 
 # Run the server using: uvicorn main:app --reload
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("main:app", port=8000, reload=True)
+# if __name__ == "__main__":
+#     import uvicorn
+#     uvicorn.run("main:app", port=8000, reload=True)
