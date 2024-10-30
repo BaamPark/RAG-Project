@@ -17,6 +17,7 @@ This project is a frontend interface for a Retrieval-Augmented Generation (RAG) 
 - Shadcn/ui
 
 ## Instructions:
+- Get openAI API, Pinecone API, and Langchain API keys
 - write .env file under backend folder
 - run run.sh
 

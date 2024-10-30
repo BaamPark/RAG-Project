@@ -19,7 +19,7 @@ app.add_middleware(
 )
 
 
-def upsert_pinecone_index(file_path: str, namespace: str=""):
+def upsert_pinecone_index(document: str, namespace: str=""):
     embeddings = OpenAIEmbeddings(model="text-embedding-3-small") #dimension=1536
     pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
     index_name = "ragcv"
@@ -34,7 +34,7 @@ def upsert_pinecone_index(file_path: str, namespace: str=""):
             ) 
         )
 
-    loader = PyPDFLoader(file_path)
+    loader = PyPDFLoader(document)
     documents = loader.load()
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
     chunked_documents = text_splitter.split_documents(documents)
@@ -91,11 +91,10 @@ def create_rag_pipeline(namespace=""):
 @app.post("/upload-pdf/")
 async def upload_pdf(file: UploadFile = File(...), namespace: str = ""):
     try:
-        file_path = f"./data/{file.filename}"
-        with open(file_path, "wb") as f:
-            f.write(await file.read())
+        # Read the uploaded PDF file content into memory
+        pdf = await file.read()
 
-        upsert_pinecone_index(file_path=file_path, namespace=namespace)
+        upsert_pinecone_index(document=pdf, namespace=namespace)
         return {"message": "PDF uploaded successfully and RAG pipeline created."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing PDF: {str(e)}")
