@@ -97,7 +97,7 @@ async def upload_pdf(file: UploadFile = File(...), namespace: str = ""):
             with open(tmp_file_path, "wb") as tmp_file:
                 tmp_file.write(await file.read())
 
-            #temporary directory will be held within the local scope. Outside the scope, the temporary directory will be deleted.
+            #temporary directory will be held within the local scope. Outside the scope, the temporary directory will be deleted
             loader = PyPDFLoader(tmp_file_path)
             documents = loader.load()
 
@@ -116,6 +116,19 @@ async def query_rag(question: str, namespace: str = ""):
         return {"response": response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")
+    
+
+@app.delete("/delete-vectors/")
+async def delete_vectors(namespace: str):
+    try:
+        pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+        index_name = "ragcv"
+        index = pc.Index(index_name)
+        index.delete(delete_all=True, namespace=namespace)
+        return {"message": "Vectors deleted successfully from namespace"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting vectors: {str(e)}")
+
 
 # Run the server using: uvicorn main:app --reload
 if __name__ == "__main__":

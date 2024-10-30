@@ -11,16 +11,14 @@ const RagPage: React.FC = () => {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [question, setQuestion] = useState<string>("");
   const [response, setResponse] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
   const [namespace, setNamespace] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // Retrieve the namespace from session storage
   useEffect(() => {
     const storedNamespace = sessionStorage.getItem("namespace");
     if (!storedNamespace) {
-      // Redirect to the namespace entry page if no namespace is found
-      router.push("/");
+      router.push("/"); // Redirect to namespace entry if none found
     } else {
       setNamespace(storedNamespace);
     }
@@ -28,15 +26,15 @@ const RagPage: React.FC = () => {
 
   const handleFileUpload = async () => {
     if (!pdfFile) return alert("Please select a PDF file.");
-
     setLoading(true);
+
     const formData = new FormData();
     formData.append("file", pdfFile);
 
     try {
       await axios.post("http://localhost:8000/upload-pdf/", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
         params: { namespace },
+        headers: { "Content-Type": "multipart/form-data" },
       });
       alert("PDF uploaded successfully!");
     } catch (error: any) {
@@ -49,7 +47,6 @@ const RagPage: React.FC = () => {
 
   const handleQuerySubmit = async () => {
     if (!question) return alert("Please enter a question.");
-
     setLoading(true);
 
     try {
@@ -60,6 +57,23 @@ const RagPage: React.FC = () => {
     } catch (error: any) {
       console.error(error);
       alert("Error querying documents.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteVectors = async () => {
+    if (!namespace) return alert("Namespace is missing.");
+    setLoading(true);
+
+    try {
+      await axios.delete("http://localhost:8000/delete-vectors/", {
+        params: { namespace },
+      });
+      alert("Vectors deleted successfully!");
+    } catch (error: any) {
+      console.error(error);
+      alert("Error deleting vectors.");
     } finally {
       setLoading(false);
     }
@@ -103,8 +117,19 @@ const RagPage: React.FC = () => {
         </CardContent>
       </Card>
 
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Manage Vectors</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={handleDeleteVectors} disabled={loading} className="w-full">
+            {loading ? "Deleting..." : "Delete Vectors"}
+          </Button>
+        </CardContent>
+      </Card>
+
       {response && (
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md mt-6">
           <CardHeader>
             <CardTitle>Response</CardTitle>
           </CardHeader>
