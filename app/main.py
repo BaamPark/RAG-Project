@@ -65,6 +65,7 @@ async def upload_pdf(file: UploadFile = File(...)):
 
 @app.get("/query/")
 async def query_rag(question: str):
+    global rag_chain
     try:
         if rag_chain is None:
             raise HTTPException(status_code=400, detail="No PDF uploaded. Please upload a PDF first.")

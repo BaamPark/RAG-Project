@@ -1,5 +1,6 @@
+.DS_store
 .env
-*.ipynb
+template/
 *.pyc
 *.pdf
-demo.*
+tempCodeRunnerFile.py
