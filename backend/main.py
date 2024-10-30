@@ -11,6 +11,7 @@ import os
 from dotenv import load_dotenv
 from pinecone import Pinecone, ServerlessSpec
 from langchain_pinecone import PineconeVectorStore
+import tempfile
 
 load_dotenv()
 app = FastAPI()
@@ -19,7 +20,7 @@ app.add_middleware(
 )
 
 
-def upsert_pinecone_index(file_path: str, namespace: str=""):
+def upsert_pinecone_index(documents: str, namespace: str=""):
     embeddings = OpenAIEmbeddings(model="text-embedding-3-small") #dimension=1536
     pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
     index_name = "ragcv"
@@ -34,8 +35,7 @@ def upsert_pinecone_index(file_path: str, namespace: str=""):
             ) 
         )
 
-    loader = PyPDFLoader(file_path)
-    documents = loader.load()
+
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
     chunked_documents = text_splitter.split_documents(documents)
 
@@ -91,12 +91,17 @@ def create_rag_pipeline(namespace=""):
 @app.post("/upload-pdf/")
 async def upload_pdf(file: UploadFile = File(...), namespace: str = ""):
     try:
-        # Save the uploaded PDF
-        file_path = f"./data/{file.filename}"
-        with open(file_path, "wb") as f:
-            f.write(await file.read())
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            tmp_file_path = os.path.join(tmpdirname, file.filename)
 
-        upsert_pinecone_index(file_path=file_path, namespace=namespace)
+            with open(tmp_file_path, "wb") as tmp_file:
+                tmp_file.write(await file.read())
+
+            #temporary directory will be held within the local scope. Outside the scope, the temporary directory will be deleted.
+            loader = PyPDFLoader(tmp_file_path)
+            documents = loader.load()
+
+        upsert_pinecone_index(documents=documents, namespace=namespace)
         return {"message": "PDF uploaded successfully and RAG pipeline created."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing PDF: {str(e)}")
