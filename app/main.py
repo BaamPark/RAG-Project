@@ -7,29 +7,71 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain import hub
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
+import os
+from dotenv import load_dotenv
+from pinecone import Pinecone, ServerlessSpec
+from langchain_pinecone import PineconeVectorStore
 
+load_dotenv()
 # Initialize FastAPI app
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware, allow_origins=['*'], allow_methods=['*'], allow_headers=['*'],
 )
-# Initialize LangChain components
-llm = ChatOpenAI(model="gpt-3.5-turbo-0125")
-
-# Global variable to store the RAG pipeline
-rag_chain = None  # This will hold the RAG chain after PDF upload
 
 
-# Define the pipeline creation function
-def create_rag_pipeline(file_path: str):
+def upsert_pinecone_index(file_path: str):
+    embeddings = OpenAIEmbeddings(model="text-embedding-3-small") #dimension=1536
+    pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+    index_name = "ragcv"
+    if index_name not in pc.list_indexes().names():
+        pc.create_index(
+            name=index_name,
+            dimension=1536,
+            metric="cosine",
+            spec=ServerlessSpec(
+                cloud='aws', 
+                region=os.getenv("PINECONE_REGION")
+            ) 
+        )
+
     loader = PyPDFLoader(file_path)
-    docs = loader.load()
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    splits = text_splitter.split_documents(docs)
+    documents = loader.load()
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+    chunked_documents = text_splitter.split_documents(documents)
 
-    # Create vector store
-    vectorstore = Chroma.from_documents(documents=splits, embedding=OpenAIEmbeddings())
-    retriever = vectorstore.as_retriever()
+    vector_store = PineconeVectorStore.from_documents(
+        documents=chunked_documents, 
+        embedding=embeddings, 
+        index_name=index_name, 
+        namespace="cv"
+    )
+
+
+def create_rag_pipeline():
+    embeddings = OpenAIEmbeddings(model="text-embedding-3-small") #dimension=1536
+    pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+
+    index_name = "ragcv"
+    if index_name not in pc.list_indexes().names():
+        pc.create_index(
+            name=index_name,
+            dimension=1536,
+            metric="cosine",
+            spec=ServerlessSpec(
+                cloud='aws', 
+                region=os.getenv("PINECONE_REGION")
+            ) 
+        )
+    vector_store = PineconeVectorStore(index_name=index_name, embedding=embeddings, namespace='cv')
+
+    retriever = vector_store.as_retriever()
+
+    llm = ChatOpenAI(
+        openai_api_key=os.environ.get('OPENAI_API_KEY'),
+        model_name='gpt-4o-mini',
+        temperature=0.0
+    )
 
     # Pull the prompt from the hub
     prompt = hub.pull("rlm/rag-prompt")
@@ -49,15 +91,13 @@ def create_rag_pipeline(file_path: str):
 
 @app.post("/upload-pdf/")
 async def upload_pdf(file: UploadFile = File(...)):
-    global rag_chain  # Use the global variable to store the chain
     try:
         # Save the uploaded PDF
         file_path = f"./data/{file.filename}"
         with open(file_path, "wb") as f:
             f.write(await file.read())
 
-        # Create the RAG pipeline and store it globally
-        rag_chain = create_rag_pipeline(file_path)
+        upsert_pinecone_index(file_path=file_path)
         return {"message": "PDF uploaded successfully and RAG pipeline created."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing PDF: {str(e)}")
@@ -65,12 +105,8 @@ async def upload_pdf(file: UploadFile = File(...)):
 
 @app.get("/query/")
 async def query_rag(question: str):
-    global rag_chain
     try:
-        if rag_chain is None:
-            raise HTTPException(status_code=400, detail="No PDF uploaded. Please upload a PDF first.")
-
-        # Invoke the RAG chain with the user's question
+        rag_chain = create_rag_pipeline()
         response = rag_chain.invoke(question)
         return {"response": response}
     except Exception as e:
