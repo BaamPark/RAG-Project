@@ -29,3 +29,6 @@
                       | User retrieves feedback through|
                       |    API response from FastAPI    |
                       +--------------------------------+
+
+
+Front-end techstack: Next.js, shadcnUI
