@@ -1,10 +1,8 @@
-#!/bin/bash
-
-# Function to handle Ctrl+C and stop all background processes
+# Function to stop all background processes on Ctrl+C
 cleanup() {
   echo "Stopping servers..."
-  pkill -f "uvicorn"  # Stop FastAPI backend
-  pkill -f "npm"  # Stop Next.js frontend
+  pkill -f "python backend/main.py"  # Stop backend
+  pkill -f "npm run dev"  # Stop frontend
   exit 0
 }
 
@@ -13,14 +11,11 @@ trap cleanup SIGINT
 
 # Start the backend (FastAPI)
 echo "Starting FastAPI backend..."
-cd backend  # Navigate to the backend directory
-uvicorn main:app --reload --port 8000 &  # Run backend in the background
-cd ..  # Go back to the root directory
+python backend/main.py &  # Run backend in the background
 
 # Start the frontend (Next.js)
 echo "Starting Next.js frontend..."
-cd frontend  # Navigate to the frontend directory
-npm run dev &  # Run frontend in the background
+npm --prefix frontend run dev &  # Run frontend from the root
 
 # Wait for both processes to finish
 wait
