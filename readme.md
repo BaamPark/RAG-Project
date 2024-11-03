@@ -1,8 +1,8 @@
-# RAG Project
+# Full-stack RAG Project
 
 <!-- import image from img/diagram.png -->
 ![Image description](img/diagram.png)
-This project is a frontend interface for a Retrieval-Augmented Generation (RAG) system. Users enter a namespace, upload PDFs, and ask questions to interact with a backend powered by FastAPI and Pinecone.
+This project is a full-stack interface for a Retrieval-Augmented Generation (RAG) system. Users enter a namespace, upload PDFs, and ask questions to interact with a backend powered by FastAPI and Pinecone.
 
 ## Next plans
 - Implement database where userID, password, and namespace are stored
@@ -15,16 +15,18 @@ This project is a frontend interface for a Retrieval-Augmented Generation (RAG) 
 - In RAG pipeline, query f"Find a context from {HP_notes_doc_1} upon {comment}"
 
 
-## Backend
-- FastAPI
-- Pinecone (Vector database)
-- LangChain for RAG pipeline
+## Technology stack
+- LLM
+    - OpenAI
+    - Langchain
+    - Pinecone
+- Backend
+    - FastAPI
+- Frontend
+    - Next.js
 
-## Frontend
-- Next.js (App Router)
-- Shadcn/ui
 
-## Instructions with docker:
+## Instructions for docker users:
 - Get your openAI API, Pinecone API, and Langchain API keys
 - Write .env file and locate it in backend directory
 - Run the below command
@@ -33,7 +35,7 @@ This project is a frontend interface for a Retrieval-Augmented Generation (RAG) 
 docker-compose up --build
 ```
 
-## Instructions without using docker:
+## Instructions for non-docker users:
 - Get your openAI API, Pinecone API, and Langchain API keys
 - Write .env file and locate it in backend directory
 - Install next.js 14 and install frontend dependencies
