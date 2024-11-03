@@ -17,18 +17,14 @@ This project is a frontend interface for a Retrieval-Augmented Generation (RAG) 
 - Shadcn/ui
 
 ## Instructions with docker:
+- Once you run the below command, you can remove build flag
 ```bash
-#build docker images
-docker build -t rag_front ./frontend  
-docker build -t rag_back ./backend
-
-#run docker images
-docker run -p 3000:3000 rag_front
-docker run -p 8000:8000 rag_back
+#First build
+docker-compose up --build
 ```
 
 ## Instructions without using docker:
-- Get openAI API, Pinecone API, and Langchain API keys
+- Get your openAI API, Pinecone API, and Langchain API keys
 - Install next.js 14
 - Install python requirements `backend/requirements.txt`
 - write .env file under backend folder

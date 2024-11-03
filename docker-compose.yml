@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "8000:8000"
+    networks:
+      - front-end  # Connects backend to the front-end network
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    networks:
+      - front-end
+      - back-end  # Connects frontend to both front-end and back-end networks
+
+networks:
+  front-end:
+  back-end:
