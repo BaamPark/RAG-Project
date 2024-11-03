@@ -16,10 +16,34 @@ This project is a frontend interface for a Retrieval-Augmented Generation (RAG) 
 - Next.js (App Router)
 - Shadcn/ui
 
-## Instructions:
+## Instructions with docker:
+```bash
+#build docker images
+docker build -t rag_front ./frontend  
+docker build -t rag_back ./backend
+
+#run docker images
+docker run -p 3000:3000 rag_front
+docker run -p 8000:8000 rag_back
+```
+
+## Instructions without using docker:
 - Get openAI API, Pinecone API, and Langchain API keys
+- Install next.js 14
+- Install python requirements `backend/requirements.txt`
 - write .env file under backend folder
 - run run.sh
+
+## Frontend dependencies
+- The latest Next.js 15 conflicts with other axios and shadcn dependencies. You can't dockerize with Next.js 15.
+- when install next.js, don't use eslint. 
+```bash
+npx create-next-app@14.2.16
+npx shadcn@latest init
+npx shadcn@latest add button
+npx shadcn@latest add card
+npx shadcn@latest add input
+```
 
 ## .env template
 ```env
@@ -32,3 +56,6 @@ PINECONE_API_KEY=your_pinecone_api_key
 PINECONE_REGION=your_pinecone_region
 PINECONE_CLOUD=your_pinecone_cloud
 ```
+
+## Notice
+- Use next.js 14.2.16
