@@ -9,6 +9,12 @@ This project is a frontend interface for a Retrieval-Augmented Generation (RAG) 
 - Implement authentication
 - Implement metadata filtering
 
+## Application idea
+- preprocess the documents so it fits in LLM context window
+- upsert HP_notes_doc_1 and comment_doc_1 on Pinecone
+- In RAG pipeline, query f"Find a context from {HP_notes_doc_1} upon {comment}"
+
+
 ## Backend
 - FastAPI
 - Pinecone (Vector database)
