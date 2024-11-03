@@ -1,4 +1,4 @@
-# RAG Project Frontend
+# RAG Project
 
 <!-- import image from img/diagram.png -->
 ![Image description](img/diagram.png)
