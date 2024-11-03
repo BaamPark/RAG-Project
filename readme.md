@@ -1,5 +1,7 @@
 # RAG Project Frontend
 
+<!-- import image from img/diagram.png -->
+![Image description](img/diagram.png)
 This project is a frontend interface for a Retrieval-Augmented Generation (RAG) system. Users enter a namespace, upload PDFs, and ask questions to interact with a backend powered by FastAPI and Pinecone.
 
 ## Next plans
