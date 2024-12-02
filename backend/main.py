@@ -1,12 +1,11 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from langchain_chroma import Chroma
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain import hub
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
+from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 import os
 from dotenv import load_dotenv
 from pinecone import Pinecone, ServerlessSpec
@@ -21,13 +20,13 @@ app.add_middleware(
 
 
 def upsert_pinecone_index(documents: str, namespace: str=""):
-    embeddings = OpenAIEmbeddings(model="text-embedding-3-small") #dimension=1536
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004") #dimension=1536
     pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
-    index_name = "ragcv"
+    index_name = "gemini"
     if index_name not in pc.list_indexes().names():
         pc.create_index(
             name=index_name,
-            dimension=1536,
+            dimension=768,
             metric="cosine",
             spec=ServerlessSpec(
                 cloud='aws', 
@@ -48,14 +47,14 @@ def upsert_pinecone_index(documents: str, namespace: str=""):
 
 
 def create_rag_pipeline(namespace=""):
-    embeddings = OpenAIEmbeddings(model="text-embedding-3-small") #dimension=1536
+    embeddings =GoogleGenerativeAIEmbeddings(model="models/text-embedding-004") #dimension=1536
     pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 
-    index_name = "ragcv"
+    index_name = "gemini"
     if index_name not in pc.list_indexes().names():
         pc.create_index(
             name=index_name,
-            dimension=1536,
+            dimension=768,
             metric="cosine",
             spec=ServerlessSpec(
                 cloud='aws', 
@@ -66,9 +65,8 @@ def create_rag_pipeline(namespace=""):
 
     retriever = vector_store.as_retriever()
 
-    llm = ChatOpenAI(
-        openai_api_key=os.environ.get('OPENAI_API_KEY'),
-        model_name='gpt-4o-mini',
+    llm = ChatGoogleGenerativeAI(
+        model='gemini-1.5-flash',
         temperature=0.0
     )
 
