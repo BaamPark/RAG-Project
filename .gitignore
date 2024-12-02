@@ -5,3 +5,5 @@ template/
 *.pdf
 tempCodeRunnerFile.py
 *.log
+*.csv
+*.ipynb
