@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, Body
 from fastapi.middleware.cors import CORSMiddleware
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -14,6 +14,7 @@ from langchain_pinecone import PineconeVectorStore
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.schema.document import Document
 import tempfile
+from pydantic import BaseModel
 
 load_dotenv()
 app = FastAPI()
@@ -21,6 +22,8 @@ app.add_middleware(
     CORSMiddleware, allow_origins=['*'], allow_methods=['*'], allow_headers=['*'],
 )
 
+class NoteModel(BaseModel):
+    note: str
 
 def upsert_pinecone_index(documents: str, namespace: str=""):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004") #dimension=1536
@@ -124,9 +127,9 @@ async def upload_pdf(file: UploadFile = File(...), namespace: str = ""):
 
 
 @app.post("/add-note/")
-async def add_note(note: str):
+async def add_note(note: NoteModel):
     try:
-        response = comment_note(note)
+        response = comment_note(note.note)
         return {"response": response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error adding note: {str(e)}")

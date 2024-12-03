@@ -10,6 +10,7 @@ import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 const RagPage: React.FC = () => {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [question, setQuestion] = useState<string>("");
+  const [note, setNote] = useState<string>(""); // Added note state
   const [response, setResponse] = useState<string | null>(null);
   const [namespace, setNamespace] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -40,6 +41,23 @@ const RagPage: React.FC = () => {
     } catch (error: any) {
       console.error(error);
       alert("Error uploading PDF.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddNote = async () => {
+    if (!note) return alert("Please enter a note.");
+    setLoading(true);
+  
+    try {
+      const res = await axios.post("http://localhost:8000/add-note/", {
+        note, // This will be sent in the request body
+      });
+      setResponse(res.data.response || "Note added successfully!");
+    } catch (error: any) {
+      console.error(error.response?.data || error);
+      alert("Error adding note.");
     } finally {
       setLoading(false);
     }
@@ -95,6 +113,24 @@ const RagPage: React.FC = () => {
           />
           <Button onClick={handleFileUpload} disabled={loading} className="w-full">
             {loading ? "Uploading..." : "Upload PDF"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card className="w-full max-w-md mb-6">
+        <CardHeader>
+          <CardTitle>Add Note</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Input
+            type="text"
+            placeholder="Enter your note"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            className="mb-4"
+          />
+          <Button onClick={handleAddNote} disabled={loading} className="w-full">
+            {loading ? "Adding Note..." : "Submit Note"}
           </Button>
         </CardContent>
       </Card>
