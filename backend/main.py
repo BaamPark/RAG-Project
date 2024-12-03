@@ -6,10 +6,13 @@ from langchain import hub
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
+import google.generativeai as genai
 import os
 from dotenv import load_dotenv
 from pinecone import Pinecone, ServerlessSpec
 from langchain_pinecone import PineconeVectorStore
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.schema.document import Document
 import tempfile
 
 load_dotenv()
@@ -34,7 +37,6 @@ def upsert_pinecone_index(documents: str, namespace: str=""):
             ) 
         )
 
-
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
     chunked_documents = text_splitter.split_documents(documents)
 
@@ -44,6 +46,22 @@ def upsert_pinecone_index(documents: str, namespace: str=""):
         index_name=index_name, 
         namespace=namespace
     )
+
+def get_text_chunks_langchain(text):
+   text_splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=100)
+   docs = [Document(page_content=x) for x in text_splitter.split_text(text)]
+   return docs
+
+def comment_note(query):
+    genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+    model = genai.GenerativeModel(model_name="tunedModels/doctor001")
+    generated_result = model.generate_content(query)
+    generated_text = generated_result.text
+    note = get_text_chunks_langchain(query)
+    comment = get_text_chunks_langchain(generated_text)
+    upsert_pinecone_index(documents=note, namespace="comment")
+    upsert_pinecone_index(documents=comment, namespace="note")
+    return generated_text
 
 
 def create_rag_pipeline(namespace=""):
@@ -104,6 +122,14 @@ async def upload_pdf(file: UploadFile = File(...), namespace: str = ""):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing PDF: {str(e)}")
 
+
+@app.post("/add-note/")
+async def add_note(note: str):
+    try:
+        response = comment_note(note)
+        return {"response": response}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error adding note: {str(e)}")
 
 
 @app.get("/query/")
